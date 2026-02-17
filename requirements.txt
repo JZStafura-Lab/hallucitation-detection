@@ -1,0 +1,30 @@
+# Core data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# PDF text extraction
+PyPDF2>=3.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Web scraping (paper list collection)
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Progress reporting
+tqdm>=4.65.0
+
+# Statistical analysis
+scipy>=1.10.0
+statsmodels>=0.14.0
+
+# Visualisation
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Optional — uncomment if needed
+# scholarly>=1.7.0          # Google Scholar scraping
+# crossrefapi>=1.5.0        # CrossRef API wrapper
+# pdfplumber>=0.9.0         # Alternative PDF extraction
+# pytest>=7.0.0             # Testing

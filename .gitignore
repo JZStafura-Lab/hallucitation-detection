@@ -205,3 +205,24 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific: data and PDFs (not versioned)
+data/pdfs/*
+!data/pdfs/.gitkeep
+data/output/*.csv
+data/output/figures/*
+!data/output/figures/.gitkeep
+!data/output/.gitkeep
+data/misc_docs/
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# API keys and secrets
+.env
+config_local.py
+secrets.py
+
+# macOS
+.DS_Store
