@@ -2,6 +2,8 @@
 
 A Python pipeline for detecting and analyzing patterns of AI-hallucinated citations in published academic papers.
 
+**Project site**: https://jzstafura-lab.github.io/hallucitation-detection/
+
 ## Research Questions
 
 **RQ1 — Expertise**: Are hallucinated citations more likely when an author cites outside their primary domain of expertise?
