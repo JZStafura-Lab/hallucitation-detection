@@ -1,0 +1,58 @@
+---
+title: "Hallucitation Detection"
+subtitle: "Analyzing patterns of AI-hallucinated citations in academic papers"
+---
+
+## Overview
+
+This project investigates where, why, and how often AI-assisted writing produces fabricated citations in submitted and accepted academic papers. Using a combination of automated detection and systematic manual coding, the study tests three pre-registered hypotheses about the conditions that predict citation hallucination.
+
+## Research Questions
+
+**RQ1 — Expertise**
+Are hallucinated citations more likely when an author cites outside their primary domain of expertise?
+
+**RQ2 — Domain Velocity**
+Do fields with faster publication cycles show higher hallucination rates than slower-moving fields?
+
+**RQ3 — Location**
+Do hallucinations cluster in particular sections of a paper (e.g., Related Work vs. Methods)?
+
+## Study Design
+
+Papers are sampled using stratified random selection across academic venues representing fields with markedly different publication velocities. The sample targets approximately 300–400 papers.
+
+Each paper passes through a four-phase pipeline:
+
+| Phase | Name | Description |
+|-------|------|-------------|
+| 0 | Collection | Stratified sampling and PDF acquisition |
+| 1 | Extraction | Automated citation extraction and hallucination scoring |
+| 2 | Coding | Manual coding of expertise and citation characteristics |
+| 3 | Analysis | Hypothesis testing and visualisation |
+
+## Detection Approach
+
+Potential hallucinations are flagged by combining two signals:
+
+- **CrossRef verification** — each extracted citation is queried against CrossRef; low match scores indicate the cited work may not exist
+- **GPTZero scoring** — surrounding context is evaluated for AI-generated text signatures
+
+Flagged citations are then reviewed manually against the coding scheme described in the [Codebook](codebook.qmd).
+
+## Status
+
+<span class="status-active">Active</span> — pipeline development and pilot collection underway.
+
+## Repository
+
+Source code, documentation, and coding materials are available at
+[github.com/JZStafura-Lab/hallucitation-detection](https://github.com/JZStafura-Lab/hallucitation-detection).
+
+## Related Work
+
+This project is part of the broader research programme at [JAB Lab](https://jzstafura-lab.github.io), alongside the [Violence Research Dashboard](https://jzstafura-lab.github.io/projects/violence/dashboard/) and other evidence synthesis efforts.
+
+---
+
+*Pre-print forthcoming. Citation details will be added upon publication.*

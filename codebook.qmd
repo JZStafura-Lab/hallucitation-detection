@@ -1,0 +1,119 @@
+---
+title: "Codebook"
+subtitle: "Decision rules and variable definitions for manual coding"
+---
+
+This codebook governs Phase 2 coding. All coders should read it fully before beginning and refer to it when edge cases arise.
+
+## Author Expertise (Phase 2A)
+
+### Variable: `Expertise_Match`
+
+Measures how well the paper's topic aligns with each key author's demonstrated expertise, based on their published record.
+
+| Code | Label | Criterion |
+|------|-------|-----------|
+| `0` | Core | Paper domain exactly matches ≥ 1 key author's primary domain |
+| `1` | Adjacent | Related field or overlapping methods, but a different subarea |
+| `2` | Distant | Outside both key authors' documented publication history |
+
+**Coding procedure**:
+
+1. Identify the **two key authors** — typically first and last/corresponding author.
+2. Locate each author's Google Scholar or institutional profile.
+3. Record their **primary domain(s)** and **five most-cited papers**.
+4. Classify the **paper's own primary domain**.
+5. Assign the most lenient match across the two authors (e.g., if one is Core, code `0`).
+
+**Examples**:
+
+- NLP paper + author with 5+ NLP papers → **Core (0)**
+- Video generation paper + image classification expert → **Adjacent (1)**
+- Ocean modeling paper + pure ML researchers → **Distant (2)**
+
+---
+
+## Citation Characteristics (Phase 2B)
+
+### Variable: `Citation_Domain`
+
+Classify the cited work's primary field using the standardised list below. Assign the single best-fit label.
+
+| Label | Description |
+|-------|-------------|
+| NLP / Language Models | Natural language processing, LLMs, text generation |
+| Computer Vision | Image/video recognition, generation, segmentation |
+| Robotics / Embodied AI | Physical systems, simulation, embodied agents |
+| ML Theory / Optimization | Learning theory, convergence, gradient methods |
+| Reinforcement Learning | RL algorithms, policy learning, reward modeling |
+| Graphs / Networks | Graph neural networks, network analysis |
+| Biomedical / Comp. Bio. | Genomics, clinical informatics, computational biology |
+| Economics / Finance | Economic theory, empirical economics, finance |
+| Political Science | Comparative politics, IR, political behavior |
+| Sociology | Social structures, institutions, collective behavior |
+| Psychology / Cog. Sci. | Cognition, behavior, psycholinguistics |
+| Other | Does not fit above categories |
+
+---
+
+### Variable: `Citation_Role`
+
+What function does the citation serve in the paper?
+
+| Code | Label | Description |
+|------|-------|-------------|
+| `B` | Background | General context or prior-work overview |
+| `M` | Methods | A specific technique, algorithm, or tool adopted by the paper |
+| `R` | Related Work | Direct comparison to a similar approach |
+| `E` | Empirical | A dataset, benchmark, or empirical finding cited |
+| `T` | Theoretical | A mathematical result, proof, or formal theorem |
+
+---
+
+### Variable: `Distance_from_Paper` *(auto-calculated)*
+
+| Code | Label | Criterion |
+|------|-------|-----------|
+| `0` | Core | Citation domain matches the paper's domain |
+| `1` | Peripheral | Citation domain is outside the paper's domain |
+
+---
+
+### Variable: `Recency_Category` *(auto-calculated from publication years)*
+
+| Code | Label |
+|------|-------|
+| `0` | Very Recent (0–1 yr before submission) |
+| `1` | Recent (2–5 yr) |
+| `2` | Moderate (6–10 yr) |
+| `3` | Old (11+ yr) |
+| `4` | Future — impossible date; strong hallucination signal |
+
+---
+
+## Reliability Protocol
+
+After completing the full dataset, randomly select 10% of coded papers (blind re-code).
+
+Report **Cohen's κ** for:
+
+- `Expertise_Match` (3-level ordinal)
+- `Citation_Role` (5-category nominal)
+
+Target: κ ≥ 0.70 for both variables before proceeding to analysis.
+
+---
+
+## Edge Cases
+
+**No Google Scholar profile found**
+: Search institutional faculty page and DBLP. If no publication record is locatable, code `Expertise_Match = 2` (Distant) and note in the Notes field.
+
+**Citation spans multiple domains**
+: Assign the primary domain and note secondary domain in Notes.
+
+**Co-authored paper with contradictory expertise**
+: Use the most lenient code (closest match) and note both authors' domains.
+
+**Citation appears verbatim elsewhere in literature**
+: Code `Is_Hallucinated = 0` (Real) — confirmation in CrossRef or another indexed source is sufficient.

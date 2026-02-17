@@ -1,0 +1,129 @@
+---
+title: "Pipeline"
+subtitle: "Four-phase workflow from paper collection to statistical analysis"
+---
+
+The pipeline is designed to be reproducible: a fixed random seed is used at the sampling stage, all API calls are logged, and manual coding is interruptible and resumable.
+
+## Phase 0 — Paper Collection
+
+**Goal**: Assemble a stratified random sample of ~300–400 papers drawn across venues that represent fields with different publication velocities.
+
+**Steps**:
+
+1. Build paper lists per venue (open-access APIs where available; manual collection for paywalled venues)
+2. Draw a reproducible stratified random sample — `sampling_tracker.py`
+3. Download PDFs — `batch_download.py` handles open-access sources; a manual download guide is generated for paywalled content
+
+**Outputs**:
+
+- `data/output/sample_tracking.csv` — master file with download status for every sampled paper
+- `data/pdfs/<venue>/` — PDFs organised by venue
+
+**Quick start**:
+
+```bash
+python phase_0_collection/QUICKSTART_COLLECTION.py
+```
+
+---
+
+## Phase 1 — Automated Processing
+
+**Goal**: Extract citations from every PDF, verify them, and produce a pre-populated coding template.
+
+**For each PDF**:
+
+1. Extract plain text (PyPDF2)
+2. Locate and parse the reference list
+3. Query each citation against CrossRef — low relevance scores flag potential hallucinations
+4. Score surrounding context with GPTZero — high AI-probability reinforces the flag
+5. Write results to output CSVs
+
+**Usage**:
+
+```python
+from phase_1_automated.phase1_automated_processing import process_batch
+from pathlib import Path
+
+process_batch(
+    pdf_directory=Path("data/pdfs/venue_name"),
+    domain="FieldName",
+    venue="Venue Year",
+    year=2024,
+)
+```
+
+**Outputs**:
+
+- `data/output/paper_metadata.csv`
+- `data/output/citations_extracted.csv`
+- `data/output/hallucination_coding.csv` ← pre-populated template for Phase 2
+
+**Token budget**: approximately 2,500 GPTZero tokens per paper.
+
+---
+
+## Phase 2 — Manual Coding
+
+**Goal**: Apply the expert coding scheme to flagged citations and to the key authors of each affected paper.
+
+Two coding tasks run in parallel:
+
+### 2A — Author Expertise (~20 min / paper)
+
+For each paper with at least one flagged citation:
+
+1. Identify the two key authors (first + corresponding)
+2. Locate their publication record (Google Scholar or institutional profile)
+3. Note their primary domain(s) and five most-cited papers
+4. Assign **Expertise_Match**: `0` Core · `1` Adjacent · `2` Distant
+
+### 2B — Citation Characteristics (~5 min / citation)
+
+For each flagged citation:
+
+1. Classify **Citation_Domain** — standardised domain list (see [Codebook](codebook.qmd))
+2. Assign **Citation_Role** — Background / Methods / Related Work / Empirical / Theoretical
+3. **Distance_from_Paper** and **Recency_Category** are auto-calculated
+
+**Interactive interface**:
+
+```python
+from phase_2_coding.phase2_manual_coding import interactive_coding_session
+interactive_coding_session()
+```
+
+**Estimated total effort**: ~48–58 hours assuming a ~30% hallucination rate and ~1.5 flagged citations per affected paper.
+
+---
+
+## Phase 3 — Statistical Analysis
+
+**Goal**: Test the three pre-registered research questions and generate visualisations.
+
+| RQ | Test | Variables |
+|----|------|-----------|
+| RQ1 (Expertise) | Logistic regression / chi-square | `Expertise_Match` × `Is_Hallucinated` |
+| RQ2 (Velocity) | ANOVA / Kruskal-Wallis | Domain bucket × hallucination rate |
+| RQ3 (Location) | Chi-square | `Section_Location` × `Is_Hallucinated` |
+
+**Usage**:
+
+```python
+from phase_3_analysis.phase3_analysis import HallucinationAnalyzer
+HallucinationAnalyzer().run_full_analysis()
+```
+
+**Outputs**: test statistics printed to console; figures saved to `data/output/figures/`:
+
+- `hallucinations_by_domain.png`
+- `expertise_distance.png`
+- `recency_distribution.png`
+- `section_location.png`
+
+---
+
+## Reliability
+
+After completing the full coding pass, re-code a random 10% subsample (blind to original codes) to assess intra-rater reliability. Report Cohen's κ for **Expertise_Match** and **Citation_Role** in the final write-up.

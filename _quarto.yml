@@ -1,0 +1,24 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Hallucitation Detection"
+  description: "A pipeline for detecting and analyzing patterns of AI-hallucinated citations in academic papers"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Overview
+      - href: pipeline.qmd
+        text: Pipeline
+      - href: codebook.qmd
+        text: Codebook
+    right:
+      - icon: github
+        href: https://github.com/JZStafura-Lab/hallucitation-detection
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true

@@ -1,0 +1,135 @@
+[
+  {
+    "objectID": "pipeline.html",
+    "href": "pipeline.html",
+    "title": "Pipeline",
+    "section": "",
+    "text": "The pipeline is designed to be reproducible: a fixed random seed is used at the sampling stage, all API calls are logged, and manual coding is interruptible and resumable."
+  },
+  {
+    "objectID": "pipeline.html#phase-0-paper-collection",
+    "href": "pipeline.html#phase-0-paper-collection",
+    "title": "Pipeline",
+    "section": "Phase 0 — Paper Collection",
+    "text": "Phase 0 — Paper Collection\nGoal: Assemble a stratified random sample of ~300–400 papers drawn across venues that represent fields with different publication velocities.\nSteps:\n\nBuild paper lists per venue (open-access APIs where available; manual collection for paywalled venues)\nDraw a reproducible stratified random sample — sampling_tracker.py\nDownload PDFs — batch_download.py handles open-access sources; a manual download guide is generated for paywalled content\n\nOutputs:\n\ndata/output/sample_tracking.csv — master file with download status for every sampled paper\ndata/pdfs/&lt;venue&gt;/ — PDFs organised by venue\n\nQuick start:\npython phase_0_collection/QUICKSTART_COLLECTION.py"
+  },
+  {
+    "objectID": "pipeline.html#phase-1-automated-processing",
+    "href": "pipeline.html#phase-1-automated-processing",
+    "title": "Pipeline",
+    "section": "Phase 1 — Automated Processing",
+    "text": "Phase 1 — Automated Processing\nGoal: Extract citations from every PDF, verify them, and produce a pre-populated coding template.\nFor each PDF:\n\nExtract plain text (PyPDF2)\nLocate and parse the reference list\nQuery each citation against CrossRef — low relevance scores flag potential hallucinations\nScore surrounding context with GPTZero — high AI-probability reinforces the flag\nWrite results to output CSVs\n\nUsage:\nfrom phase_1_automated.phase1_automated_processing import process_batch\nfrom pathlib import Path\n\nprocess_batch(\n    pdf_directory=Path(\"data/pdfs/venue_name\"),\n    domain=\"FieldName\",\n    venue=\"Venue Year\",\n    year=2024,\n)\nOutputs:\n\ndata/output/paper_metadata.csv\ndata/output/citations_extracted.csv\ndata/output/hallucination_coding.csv ← pre-populated template for Phase 2\n\nToken budget: approximately 2,500 GPTZero tokens per paper."
+  },
+  {
+    "objectID": "pipeline.html#phase-2-manual-coding",
+    "href": "pipeline.html#phase-2-manual-coding",
+    "title": "Pipeline",
+    "section": "Phase 2 — Manual Coding",
+    "text": "Phase 2 — Manual Coding\nGoal: Apply the expert coding scheme to flagged citations and to the key authors of each affected paper.\nTwo coding tasks run in parallel:\n\n2A — Author Expertise (~20 min / paper)\nFor each paper with at least one flagged citation:\n\nIdentify the two key authors (first + corresponding)\nLocate their publication record (Google Scholar or institutional profile)\nNote their primary domain(s) and five most-cited papers\nAssign Expertise_Match: 0 Core · 1 Adjacent · 2 Distant\n\n\n\n2B — Citation Characteristics (~5 min / citation)\nFor each flagged citation:\n\nClassify Citation_Domain — standardised domain list (see Codebook)\nAssign Citation_Role — Background / Methods / Related Work / Empirical / Theoretical\nDistance_from_Paper and Recency_Category are auto-calculated\n\nInteractive interface:\nfrom phase_2_coding.phase2_manual_coding import interactive_coding_session\ninteractive_coding_session()\nEstimated total effort: ~48–58 hours assuming a ~30% hallucination rate and ~1.5 flagged citations per affected paper."
+  },
+  {
+    "objectID": "pipeline.html#phase-3-statistical-analysis",
+    "href": "pipeline.html#phase-3-statistical-analysis",
+    "title": "Pipeline",
+    "section": "Phase 3 — Statistical Analysis",
+    "text": "Phase 3 — Statistical Analysis\nGoal: Test the three pre-registered research questions and generate visualisations.\n\n\n\n\n\n\n\n\nRQ\nTest\nVariables\n\n\n\n\nRQ1 (Expertise)\nLogistic regression / chi-square\nExpertise_Match × Is_Hallucinated\n\n\nRQ2 (Velocity)\nANOVA / Kruskal-Wallis\nDomain bucket × hallucination rate\n\n\nRQ3 (Location)\nChi-square\nSection_Location × Is_Hallucinated\n\n\n\nUsage:\nfrom phase_3_analysis.phase3_analysis import HallucinationAnalyzer\nHallucinationAnalyzer().run_full_analysis()\nOutputs: test statistics printed to console; figures saved to data/output/figures/:\n\nhallucinations_by_domain.png\nexpertise_distance.png\nrecency_distribution.png\nsection_location.png"
+  },
+  {
+    "objectID": "pipeline.html#reliability",
+    "href": "pipeline.html#reliability",
+    "title": "Pipeline",
+    "section": "Reliability",
+    "text": "Reliability\nAfter completing the full coding pass, re-code a random 10% subsample (blind to original codes) to assess intra-rater reliability. Report Cohen’s κ for Expertise_Match and Citation_Role in the final write-up."
+  },
+  {
+    "objectID": "codebook.html",
+    "href": "codebook.html",
+    "title": "Codebook",
+    "section": "",
+    "text": "This codebook governs Phase 2 coding. All coders should read it fully before beginning and refer to it when edge cases arise."
+  },
+  {
+    "objectID": "codebook.html#author-expertise-phase-2a",
+    "href": "codebook.html#author-expertise-phase-2a",
+    "title": "Codebook",
+    "section": "Author Expertise (Phase 2A)",
+    "text": "Author Expertise (Phase 2A)\n\nVariable: Expertise_Match\nMeasures how well the paper’s topic aligns with each key author’s demonstrated expertise, based on their published record.\n\n\n\n\n\n\n\n\nCode\nLabel\nCriterion\n\n\n\n\n0\nCore\nPaper domain exactly matches ≥ 1 key author’s primary domain\n\n\n1\nAdjacent\nRelated field or overlapping methods, but a different subarea\n\n\n2\nDistant\nOutside both key authors’ documented publication history\n\n\n\nCoding procedure:\n\nIdentify the two key authors — typically first and last/corresponding author.\nLocate each author’s Google Scholar or institutional profile.\nRecord their primary domain(s) and five most-cited papers.\nClassify the paper’s own primary domain.\nAssign the most lenient match across the two authors (e.g., if one is Core, code 0).\n\nExamples:\n\nNLP paper + author with 5+ NLP papers → Core (0)\nVideo generation paper + image classification expert → Adjacent (1)\nOcean modeling paper + pure ML researchers → Distant (2)"
+  },
+  {
+    "objectID": "codebook.html#citation-characteristics-phase-2b",
+    "href": "codebook.html#citation-characteristics-phase-2b",
+    "title": "Codebook",
+    "section": "Citation Characteristics (Phase 2B)",
+    "text": "Citation Characteristics (Phase 2B)\n\nVariable: Citation_Domain\nClassify the cited work’s primary field using the standardised list below. Assign the single best-fit label.\n\n\n\n\n\n\n\nLabel\nDescription\n\n\n\n\nNLP / Language Models\nNatural language processing, LLMs, text generation\n\n\nComputer Vision\nImage/video recognition, generation, segmentation\n\n\nRobotics / Embodied AI\nPhysical systems, simulation, embodied agents\n\n\nML Theory / Optimization\nLearning theory, convergence, gradient methods\n\n\nReinforcement Learning\nRL algorithms, policy learning, reward modeling\n\n\nGraphs / Networks\nGraph neural networks, network analysis\n\n\nBiomedical / Comp. Bio.\nGenomics, clinical informatics, computational biology\n\n\nEconomics / Finance\nEconomic theory, empirical economics, finance\n\n\nPolitical Science\nComparative politics, IR, political behavior\n\n\nSociology\nSocial structures, institutions, collective behavior\n\n\nPsychology / Cog. Sci.\nCognition, behavior, psycholinguistics\n\n\nOther\nDoes not fit above categories\n\n\n\n\n\n\nVariable: Citation_Role\nWhat function does the citation serve in the paper?\n\n\n\n\n\n\n\n\nCode\nLabel\nDescription\n\n\n\n\nB\nBackground\nGeneral context or prior-work overview\n\n\nM\nMethods\nA specific technique, algorithm, or tool adopted by the paper\n\n\nR\nRelated Work\nDirect comparison to a similar approach\n\n\nE\nEmpirical\nA dataset, benchmark, or empirical finding cited\n\n\nT\nTheoretical\nA mathematical result, proof, or formal theorem\n\n\n\n\n\n\nVariable: Distance_from_Paper (auto-calculated)\n\n\n\nCode\nLabel\nCriterion\n\n\n\n\n0\nCore\nCitation domain matches the paper’s domain\n\n\n1\nPeripheral\nCitation domain is outside the paper’s domain\n\n\n\n\n\n\nVariable: Recency_Category (auto-calculated from publication years)\n\n\n\nCode\nLabel\n\n\n\n\n0\nVery Recent (0–1 yr before submission)\n\n\n1\nRecent (2–5 yr)\n\n\n2\nModerate (6–10 yr)\n\n\n3\nOld (11+ yr)\n\n\n4\nFuture — impossible date; strong hallucination signal"
+  },
+  {
+    "objectID": "codebook.html#reliability-protocol",
+    "href": "codebook.html#reliability-protocol",
+    "title": "Codebook",
+    "section": "Reliability Protocol",
+    "text": "Reliability Protocol\nAfter completing the full dataset, randomly select 10% of coded papers (blind re-code).\nReport Cohen’s κ for:\n\nExpertise_Match (3-level ordinal)\nCitation_Role (5-category nominal)\n\nTarget: κ ≥ 0.70 for both variables before proceeding to analysis."
+  },
+  {
+    "objectID": "codebook.html#edge-cases",
+    "href": "codebook.html#edge-cases",
+    "title": "Codebook",
+    "section": "Edge Cases",
+    "text": "Edge Cases\n\nNo Google Scholar profile found\n\nSearch institutional faculty page and DBLP. If no publication record is locatable, code Expertise_Match = 2 (Distant) and note in the Notes field.\n\nCitation spans multiple domains\n\nAssign the primary domain and note secondary domain in Notes.\n\nCo-authored paper with contradictory expertise\n\nUse the most lenient code (closest match) and note both authors’ domains.\n\nCitation appears verbatim elsewhere in literature\n\nCode Is_Hallucinated = 0 (Real) — confirmation in CrossRef or another indexed source is sufficient."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Hallucitation Detection",
+    "section": "",
+    "text": "This project investigates where, why, and how often AI-assisted writing produces fabricated citations in submitted and accepted academic papers. Using a combination of automated detection and systematic manual coding, the study tests three pre-registered hypotheses about the conditions that predict citation hallucination."
+  },
+  {
+    "objectID": "index.html#overview",
+    "href": "index.html#overview",
+    "title": "Hallucitation Detection",
+    "section": "",
+    "text": "This project investigates where, why, and how often AI-assisted writing produces fabricated citations in submitted and accepted academic papers. Using a combination of automated detection and systematic manual coding, the study tests three pre-registered hypotheses about the conditions that predict citation hallucination."
+  },
+  {
+    "objectID": "index.html#research-questions",
+    "href": "index.html#research-questions",
+    "title": "Hallucitation Detection",
+    "section": "Research Questions",
+    "text": "Research Questions\nRQ1 — Expertise Are hallucinated citations more likely when an author cites outside their primary domain of expertise?\nRQ2 — Domain Velocity Do fields with faster publication cycles show higher hallucination rates than slower-moving fields?\nRQ3 — Location Do hallucinations cluster in particular sections of a paper (e.g., Related Work vs. Methods)?"
+  },
+  {
+    "objectID": "index.html#study-design",
+    "href": "index.html#study-design",
+    "title": "Hallucitation Detection",
+    "section": "Study Design",
+    "text": "Study Design\nPapers are sampled using stratified random selection across academic venues representing fields with markedly different publication velocities. The sample targets approximately 300–400 papers.\nEach paper passes through a four-phase pipeline:\n\n\n\n\n\n\n\n\nPhase\nName\nDescription\n\n\n\n\n0\nCollection\nStratified sampling and PDF acquisition\n\n\n1\nExtraction\nAutomated citation extraction and hallucination scoring\n\n\n2\nCoding\nManual coding of expertise and citation characteristics\n\n\n3\nAnalysis\nHypothesis testing and visualisation"
+  },
+  {
+    "objectID": "index.html#detection-approach",
+    "href": "index.html#detection-approach",
+    "title": "Hallucitation Detection",
+    "section": "Detection Approach",
+    "text": "Detection Approach\nPotential hallucinations are flagged by combining two signals:\n\nCrossRef verification — each extracted citation is queried against CrossRef; low match scores indicate the cited work may not exist\nGPTZero scoring — surrounding context is evaluated for AI-generated text signatures\n\nFlagged citations are then reviewed manually against the coding scheme described in the Codebook."
+  },
+  {
+    "objectID": "index.html#status",
+    "href": "index.html#status",
+    "title": "Hallucitation Detection",
+    "section": "Status",
+    "text": "Status\nActive — pipeline development and pilot collection underway."
+  },
+  {
+    "objectID": "index.html#repository",
+    "href": "index.html#repository",
+    "title": "Hallucitation Detection",
+    "section": "Repository",
+    "text": "Repository\nSource code, documentation, and coding materials are available at github.com/JZStafura-Lab/hallucitation-detection."
+  },
+  {
+    "objectID": "index.html#related-work",
+    "href": "index.html#related-work",
+    "title": "Hallucitation Detection",
+    "section": "Related Work",
+    "text": "Related Work\nThis project is part of the broader research programme at JAB Lab, alongside the Violence Research Dashboard and other evidence synthesis efforts.\n\nPre-print forthcoming. Citation details will be added upon publication."
+  }
+]
